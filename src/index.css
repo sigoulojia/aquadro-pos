@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-100 text-gray-900 font-sans antialiased selection:bg-blue-600 selection:text-white;
+  }
+
+  /* Barres de défilement sobres pour ERP/POS */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Styles d'impression ticket thermique ESC/POS */
+@media screen {
+  #thermal-print-area {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #thermal-print-area, #thermal-print-area * {
+    visibility: visible !important;
+  }
+  #thermal-print-area {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 3mm 4mm !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: black !important;
+    background: white !important;
+  }
+  #thermal-print-area.paper-58mm {
+    width: 58mm !important;
+    font-size: 9.5px !important;
+    padding: 2mm 3mm !important;
+  }
+  #thermal-print-area.paper-a4 {
+    width: 210mm !important;
+    font-size: 14px !important;
+    padding: 20mm !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+  }
+}
+
+/* Animation Laser Scanner Code-Barres */
+@keyframes scanner-laser {
+  0% {
+    top: 8%;
+    opacity: 0.85;
+  }
+  50% {
+    top: 88%;
+    opacity: 1;
+  }
+  100% {
+    top: 8%;
+    opacity: 0.85;
+  }
+}
+
+.animate-scanner-laser {
+  animation: scanner-laser 1.8s ease-in-out infinite;
+}
+
+/* Confinement vidéo html5-qrcode pour éviter tout débordement ou écran bleu */
+#reader-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 0.75rem !important;
+}
+
+#reader-container #reader {
+  border: none !important;
+  background: transparent !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#reader-container #reader__scan_region {
+  min-height: unset !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#reader-container #reader__dashboard {
+  display: none !important;
+}
+
+

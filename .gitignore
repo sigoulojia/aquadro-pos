@@ -1,0 +1,35 @@
+# Frontend dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Frontend build output
+dist/
+dist-ssr/
+build/
+coverage/
+
+# Tauri/Rust build
+src-tauri/target/
+target/
+
+# Local database and env
+src-tauri/.env
+src-tauri/aquadro_dev.db
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Signing keys and certificates
+*.key
+*.pem
+*.pfx
+*.p12
+*.secret
+secrets/

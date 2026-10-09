@@ -1,0 +1,121 @@
+name: Release Aquadro POS (Windows & Updater)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to release (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  # Étape 1 : Vérification stricte des tests avant toute tentative de publication
+  test:
+    name: Run Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies for Linux test runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run Frontend Tests (Vitest)
+        run: npm test
+
+      - name: Run Backend Tests (Cargo)
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Verify Frontend Production Build
+        run: npm run build
+
+  # Étape 2 : Construction de l'installeur Windows et signature cryptographique de la mise à jour
+  build-and-release:
+    name: Build Signed Windows NSIS & Tauri Updater Artifacts
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Validate Semantic Version Alignment
+        shell: bash
+        run: |
+          TAG_REF="${{ github.ref_name }}"
+          if [ -z "$TAG_REF" ] || [ "$TAG_REF" = "main" ]; then
+            TAG_REF="${{ github.event.inputs.version }}"
+          fi
+          RAW_VERSION="${TAG_REF#v}"
+          echo "Target Release Version: $RAW_VERSION"
+          
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAURI_VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          
+          if [ "$PKG_VERSION" != "$RAW_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag ($RAW_VERSION)"
+            exit 1
+          fi
+          if [ "$TAURI_VERSION" != "$RAW_VERSION" ]; then
+            echo "::error::tauri.conf.json version ($TAURI_VERSION) does not match tag ($RAW_VERSION)"
+            exit 1
+          fi
+          echo "Semantic Version verification passed: $RAW_VERSION"
+
+      - name: Build Tauri Application & Release Artifacts
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'Aquadro POS v__VERSION__'
+          releaseBody: |
+            ## Aquadro POS v__VERSION__ — Production Release
+
+            ### Notes de version (Release Highlights)
+            - Moteur de Caisse Desktop optimisé avec SQLite autoritaire WAL (AppData locale).
+            - Support continu USB Barcode Scanner (Plug & Play sans bouton d'activation).
+            - Contrôle strict du stock, FEFO, encaissement espèces avec calcul de monnaie, et carte bancaire.
+            - Mises à jour automatiques signées via Tauri Updater (Minisign).
+            - Préservation absolue des données locales lors des mises à jour.
+
+            ### Fichiers de distribution
+            - **Installeur Windows :** `AquadroPOS_${{ matrix.target || 'x64' }}-setup.exe`
+            - **Package de mise à jour :** `AquadroPOS_${{ matrix.target || 'x64' }}-setup.nsis.zip`
+            - **Signature Minisign :** `AquadroPOS_${{ matrix.target || 'x64' }}-setup.nsis.zip.sig`
+            - **Manifest Updater :** `latest.json`
+          releaseDraft: false
+          prerelease: false

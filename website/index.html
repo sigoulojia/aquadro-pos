@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aquadro POS — Logiciel de Caisse & Gestion Commerciale Desktop (Algérie)</title>
+  <meta name="description" content="Aquadro POS est le système de caisse et ERP desktop nouvelle génération pour commerces en Algérie. 100% autonome hors-ligne, SQLite WAL, lecteur code-barres USB instantané.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="container header-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="#1E3A8A"/>
+            <path d="M16 6L25 24H7L16 6Z" fill="#3B82F6"/>
+            <circle cx="16" cy="18" r="4" fill="#93C5FD"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Aquadro POS</span>
+          <span class="brand-badge">Desktop Edition</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#features">Fonctionnalités</a>
+        <a href="#download">Téléchargement</a>
+        <a href="#releases">Notes de Version</a>
+        <a href="#specs">Configuration</a>
+        <a href="#support">Support</a>
+      </nav>
+      <div class="header-action">
+        <a href="#download" class="btn btn-sm btn-primary">Télécharger v1.0.0</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="download">
+    <div class="container hero-container">
+      <div class="hero-badge">
+        <span class="status-indicator"></span>
+        <span>Version <strong id="hero-version-tag">v1.0.0</strong> — Production Core Complete</span>
+      </div>
+      
+      <h1 class="hero-title">
+        La Caisse Desktop Rapide, Autonome & Conçue pour le Commerce Réel.
+      </h1>
+      
+      <p class="hero-subtitle">
+        Conçu pour les magasins et commerces de détail en Algérie : moteur SQLite WAL natif sans dépendance au cloud, prise en charge immédiate du lecteur code-barres USB, gestion des stocks FEFO et conformité fiscale DGI.
+      </p>
+
+      <div class="download-card">
+        <div class="download-card-body">
+          <div class="os-icon">
+            <svg width="40" height="40" viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 12.402L35.688 7.531V41.748H0V12.402ZM35.688 46.104V80.354L0 75.483V46.104H35.688ZM40.088 6.932L87.491 0V41.748H40.088V6.932ZM87.491 88L40.088 81.068V46.104H87.491V88Z" fill="#00ADEF"/>
+            </svg>
+          </div>
+          <div class="download-info">
+            <h3 class="download-heading">Aquadro POS pour Windows (64-bit)</h3>
+            <p class="download-meta">
+              Installeur officiel NSIS &bull; Compatible Windows 10 & 11 (x64) &bull; Signé cryptographiquement (Minisign)
+            </p>
+            <div class="release-quick-meta">
+              <span>Version : <strong id="card-version">1.0.0</strong></span>
+              <span>Publié le : <strong id="card-date">09 Octobre 2026</strong></span>
+              <span>Architecture : <strong>x86_64</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="download-actions">
+          <a id="primary-download-btn" href="https://github.com/sigoulojia/aquadro-pos/releases/latest" class="btn btn-lg btn-success" target="_blank" rel="noopener noreferrer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span id="btn-label">Télécharger l'Installeur Windows (.exe)</span>
+          </a>
+          <a href="#releases" class="btn btn-lg btn-secondary">
+            Consulter les Release Notes
+          </a>
+        </div>
+
+        <div class="integrity-banner">
+          <div class="integrity-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Tauri Updater activé avec vérification automatique des signatures Ed25519</span>
+          </div>
+          <div class="integrity-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Mises à jour sans perte de données (%APPDATA% préservé)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Performances & Fiabilité</span>
+        <h2 class="section-title">Une Solution Taillée pour la Réalité du Terrain</h2>
+        <p class="section-desc">Chaque composant a été conçu pour éliminer les ralentissements à la caisse et garantir la continuité des ventes.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon icon-blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="M7 15h0M2 9h20"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Scanner Code-barres USB Permanent</h3>
+          <p class="feature-text">
+            Fonctionnement continu sans aucun bouton d'activation. Scannez vos articles consécutivement : les quantités s'incrémentent en temps réel dans le panier.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-emerald">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Base SQLite WAL 100% Locale</h3>
+          <p class="feature-text">
+            Toutes les transactions, stocks et sessions de caisse sont enregistrés localement dans un fichier SQLite ultra-performant. Zéro panne en cas de coupure Internet.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-purple">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Encaissement Atomique & Monnaie</h3>
+          <p class="feature-text">
+            Calcul précis de la monnaie rendue, enregistrement des références bancaires (TPE), prévention des encaissements en doublon (clé d'idempotence) et transactions atomiques.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-amber">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 8v13H3V8"/>
+              <path d="M1 3h22v5H1z"/>
+              <path d="M10 12h4"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Gestion des Stocks & FEFO</h3>
+          <p class="feature-text">
+            Traçabilité des dates de péremption, valorisation CMP, blocage des ventes en rupture de stock et réapprovisionnements fournisseurs automatisés.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-rose">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Conformité Fiscale Algérienne (DGI)</h3>
+          <p class="feature-text">
+            Édition des tickets de caisse (58mm / 80mm), factures normalisées avec mentions légales (NIF, NIS, RC, ART), avoirs, et rapport Z d'arrêt de caisse.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-cyan">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Mises à Jour Automatiques Signées</h3>
+          <p class="feature-text">
+            Grâce à Tauri Updater, recevez les améliorations en toute sérénité. Chaque mise à jour est vérifiée par signature cryptographique avant son installation.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Releases & Changelog -->
+  <section class="releases-section" id="releases">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Historique des Versions</span>
+        <h2 class="section-title">Notes de Version & Mises à Jour</h2>
+        <p class="section-desc">Transparence totale sur les évolutions techniques, correctifs et fonctionnalités ajoutées.</p>
+      </div>
+
+      <div class="releases-container" id="releases-list">
+        <!-- Contenu dynamique chargé par script.js ou fallback ci-dessous -->
+        <article class="release-item">
+          <div class="release-item-header">
+            <div class="release-title-row">
+              <span class="badge-version">v1.0.0</span>
+              <span class="badge-stable">Stable Release</span>
+              <h3 class="release-name">Aquadro POS v1.0.0 — Production Core Complete</h3>
+            </div>
+            <time class="release-date">09 Octobre 2026</time>
+          </div>
+          <div class="release-content">
+            <h4>Points Clés & Fonctionnalités Disponibles :</h4>
+            <ul>
+              <li><strong>Moteur SQLite WAL Natif :</strong> Base de données locale ultra-stable localisée dans <code>%APPDATA%/com.aquadro.pos</code> sans aucun fallback mémoire en production.</li>
+              <li><strong>Lecteur Code-barres USB Permanent :</strong> Détection continue du scanner HID avec isolation complète des champs de saisie manuelle.</li>
+              <li><strong>Module Caisse & Encaissement :</strong> Panier dynamique, calcul de monnaie rendu, enregistrement du paiement par carte bancaire, prévention des doublons avec idempotence.</li>
+              <li><strong>Transactions Atomiques :</strong> Rollback complet et intégrité totale en cas d'erreur de transaction financière ou d'anomalie de stock.</li>
+              <li><strong>Gestion des Retours & Remboursements :</strong> Réintégration automatique des articles au stock avec piste d'audit complète.</li>
+              <li><strong>Sessions de Caisse & Rapport Z :</strong> Clôture de caisse avec écart comptable et sauvegarde des totaux.</li>
+              <li><strong>Tauri 2 Auto-Updater :</strong> Intégration complète de l'Updater avec signature cryptographique Minisign (Ed25519) et distribution HTTPS.</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- System Requirements -->
+  <section class="specs-section" id="specs">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Spécifications Techniques</span>
+        <h2 class="section-title">Configuration Système Requise</h2>
+        <p class="section-desc">Aquadro POS est optimisé pour consommer un minimum de ressources matérielles.</p>
+      </div>
+
+      <div class="specs-grid">
+        <div class="spec-card">
+          <h4>Système d'Exploitation</h4>
+          <p>Windows 10 ou Windows 11 (Édition 64-bit)</p>
+        </div>
+        <div class="spec-card">
+          <h4>Processeur (CPU)</h4>
+          <p>Intel Core i3 / AMD Ryzen 3 ou équivalent (x86_64)</p>
+        </div>
+        <div class="spec-card">
+          <h4>Mémoire Vive (RAM)</h4>
+          <p>4 Go minimum (8 Go recommandés pour les gros catalogues)</p>
+        </div>
+        <div class="spec-card">
+          <h4>Espace Disque</h4>
+          <p>250 Mo d'espace libre pour l'application et la base SQLite</p>
+        </div>
+        <div class="spec-card">
+          <h4>Périphériques Recommandés</h4>
+          <p>Lecteur code-barres USB (Émulation Clavier HID), Imprimante thermique ESC/POS (58mm/80mm), Tiroir-caisse RJ11</p>
+        </div>
+        <div class="spec-card">
+          <h4>Connexion Internet</h4>
+          <p>Optionnelle (requise uniquement pour la vérification des mises à jour logicielles)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support & Contact -->
+  <section class="support-section" id="support">
+    <div class="container support-container">
+      <div class="support-card">
+        <h2 class="support-title">Support Technique & Contact</h2>
+        <p class="support-desc">
+          Pour toute question relative au déploiement, à la configuration de vos imprimantes thermiques de caisse ou pour signaler une anomalie, notre équipe est à votre disposition.
+        </p>
+
+        <div class="support-details">
+          <div class="contact-item">
+            <span class="contact-label">Développeur & Éditeur :</span>
+            <span class="contact-value">Boudelaa Youcef Seddik (بوضلعة يوسف الصديق)</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Localisation :</span>
+            <span class="contact-value">Algérie (National Coverage)</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Dépôt du Projet :</span>
+            <a href="https://github.com/sigoulojia/aquadro-pos" class="contact-link" target="_blank" rel="noopener noreferrer">github.com/sigoulojia/aquadro-pos</a>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Mises à Jour :</span>
+            <span class="contact-value">Canal HTTPS GitHub Releases Officiel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <p>&copy; 2026 Aquadro POS Algérie. Tous droits réservés.</p>
+      <p class="footer-credit">Conçu avec Tauri 2, Rust & React pour des performances desktop absolues.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
