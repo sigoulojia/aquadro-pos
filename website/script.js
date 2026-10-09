@@ -82,6 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupDownloadHandlers() {
   const primaryBtn = document.getElementById('primary-download-btn');
   const headerBtn = document.getElementById('header-download-btn');
+  const zipBtn = document.getElementById('zip-download-btn');
+  const copyBtn = document.getElementById('copy-cmd-btn');
+  const cmdText = document.getElementById('powershell-cmd-text');
 
   const handleDownloadClick = (e) => {
     e.preventDefault();
@@ -90,6 +93,32 @@ function setupDownloadHandlers() {
 
   if (primaryBtn) primaryBtn.addEventListener('click', handleDownloadClick);
   if (headerBtn) headerBtn.addEventListener('click', handleDownloadClick);
+
+  if (zipBtn) {
+    zipBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const zipUrl = zipBtn.getAttribute('href') || `https://github.com/${GITHUB_REPO}/releases/latest/download/AquadroPOS_1.0.0_x64-setup.nsis.zip`;
+      triggerDirectDownload(zipUrl);
+    });
+  }
+
+  if (copyBtn && cmdText) {
+    copyBtn.addEventListener('click', async () => {
+      try {
+        const textToCopy = cmdText.textContent.trim();
+        await navigator.clipboard.writeText(textToCopy);
+        const copyBtnText = document.getElementById('copy-btn-text');
+        if (copyBtnText) copyBtnText.textContent = 'تم النسخ بنجاح ✓';
+        copyBtn.style.background = '#10B981';
+        setTimeout(() => {
+          if (copyBtnText) copyBtnText.textContent = 'نسخ الأمر';
+          copyBtn.style.background = '#2563EB';
+        }, 2500);
+      } catch (err) {
+        console.warn('Clipboard write failed:', err);
+      }
+    });
+  }
 }
 
 function triggerDirectDownload(url) {

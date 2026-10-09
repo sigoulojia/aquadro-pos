@@ -77,7 +77,7 @@
         </div>
 
         <div class="download-actions">
-          <a id="primary-download-btn" href="https://github.com/sigoulojia/aquadro-pos/releases/latest/download/AquadroPOS_1.0.0_x64-setup.exe" class="btn btn-lg btn-success" download>
+          <a id="primary-download-btn" href="https://github.com/sigoulojia/aquadro-releases/releases/latest/download/AquadroPOS_1.0.0_x64-setup.exe" class="btn btn-lg btn-success" download>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -85,9 +85,82 @@
             </svg>
             <span id="btn-label">Télécharger l'Installeur Windows (.exe)</span>
           </a>
-          <a href="#releases" class="btn btn-lg btn-secondary">
-            Consulter les Release Notes
+
+          <a id="zip-download-btn" href="https://github.com/sigoulojia/aquadro-releases/releases/latest/download/AquadroPOS_1.0.0_x64-setup.nsis.zip" class="btn btn-lg btn-secondary" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="21 8 21 21 3 21 3 8"/>
+              <rect x="1" y="3" width="22" height="5"/>
+              <line x1="10" y1="12" x2="14" y2="12"/>
+            </svg>
+            <span>Télécharger en Archive (.zip)</span>
           </a>
+        </div>
+
+        <div class="download-alt-row">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Alternative sans alerte :</span>
+          <a href="#powershell-install" class="link-alt-download">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            <span>تثبيت فوري مباشر بأمر واحد (PowerShell)</span>
+          </a>
+          <a href="#releases" class="link-alt-download">
+            <span>Release Notes v1.0.0</span>
+          </a>
+        </div>
+
+        <!-- One-Click PowerShell Safe Install Box -->
+        <div class="powershell-card" id="powershell-install">
+          <div class="powershell-header">
+            <div class="powershell-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+              <span>تثبيت فوري مباشر بدون تحذيرات الأمان (Windows PowerShell)</span>
+            </div>
+            <span class="powershell-badge">Zero SmartScreen Warning</span>
+          </div>
+
+          <div class="powershell-cmd-box">
+            <code class="powershell-code" id="powershell-cmd-text">irm https://raw.githubusercontent.com/sigoulojia/aquadro-website/main/install.ps1 | iex</code>
+            <button class="btn-copy-cmd" id="copy-cmd-btn" type="button" title="نسخ الأمر">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span id="copy-btn-text">نسخ الأمر</span>
+            </button>
+          </div>
+          <p class="powershell-desc">
+            افتح موجه أوامر Windows PowerShell ثم الصق هذا الأمر واضغط Enter. سيتم تنزيل البرنامج وفك حظر الأمان وتشغيل المثبت مباشرة بنقرة واحدة!
+          </p>
+        </div>
+
+        <!-- SmartScreen Guide Card -->
+        <div class="smartscreen-guide">
+          <div class="smartscreen-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>هل ظهرت لك نافذة حماية الويندوز الزرقاء (Windows Defender SmartScreen)؟</span>
+          </div>
+          <p style="font-size: 0.78rem; color: #475569; margin-bottom: 6px;">
+            تظهر هذه الشاشة لمرة واحدة فقط للبرامج الجديدة التي تم إطلاقها حديثاً ولم تحصل بعد على شهادة EV تجارية. لتخطيها في ثانيتين:
+          </p>
+          <div class="smartscreen-steps">
+            <div class="smartscreen-step-box">
+              <div class="smartscreen-step-num">الخطوة 1</div>
+              <div class="smartscreen-step-text">اضغط على رابط <strong>"المزيد من المعلومات" (More info)</strong> الظاهر تحت النص.</div>
+            </div>
+            <div class="smartscreen-step-box">
+              <div class="smartscreen-step-num">الخطوة 2</div>
+              <div class="smartscreen-step-text">اضغط على زر <strong>"تشغيل على أي حال" (Run anyway)</strong> للبدء الفوري.</div>
+            </div>
+          </div>
         </div>
 
         <div class="integrity-banner">
