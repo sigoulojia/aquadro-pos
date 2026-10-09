@@ -1,7 +1,7 @@
 // Aquadro POS — Direct Download & Release Metadata Engine
 // Déclenche le téléchargement direct de l'installeur Windows (.exe) sans redirection vers GitHub
 
-const GITHUB_REPO = 'sigoulojia/aquadro-pos';
+const GITHUB_REPO = 'sigoulojia/aquadro-releases';
 const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 let directDownloadUrl = `https://github.com/${GITHUB_REPO}/releases/latest/download/AquadroPOS_1.0.0_x64-setup.exe`;
 
