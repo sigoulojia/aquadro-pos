@@ -610,3 +610,54 @@ body {
     gap: 12px;
   }
 }
+
+/* Floating Download Toast */
+.download-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #FFFFFF;
+  border: 1px solid #10B981;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  z-index: 1000;
+  transform: translateY(120%);
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  max-width: 420px;
+}
+
+.download-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.download-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.download-toast-icon {
+  background: #ECFDF5;
+  padding: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.download-toast-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.download-toast-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
