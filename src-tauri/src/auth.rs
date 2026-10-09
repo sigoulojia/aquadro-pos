@@ -85,7 +85,16 @@
             }
         }
 
-        let users = sqlx::query!("SELECT id, name, role, store_id, pin_hash FROM users WHERE is_active = 1")
+        #[derive(FromRow)]
+        struct UserAuthRow {
+            id: String,
+            name: String,
+            role: String,
+            store_id: Option<String>,
+            pin_hash: String,
+        }
+
+        let users: Vec<UserAuthRow> = sqlx::query_as("SELECT id, name, role, store_id, pin_hash FROM users WHERE is_active = 1")
             .fetch_all(&*pool)
             .await
             .map_err(|e| e.to_string())?;
@@ -94,7 +103,7 @@
         for u in users {
             if verify_pin(&pin, &u.pin_hash).await.unwrap_or(false) {
                 matched_user = Some(SafeUser {
-                    id: u.id.unwrap_or_default(),
+                    id: u.id,
                     name: u.name,
                     role: u.role,
                     store_id: u.store_id,
@@ -187,13 +196,19 @@
         
         let payload = format!(r#"{{"status":"{}","description":"{}","app_version":"{}"}}"#, status, details, app_version);
         
-        let _ = sqlx::query!(
+        let _ = sqlx::query(
             r#"
             INSERT INTO audit_logs (id, user_id, action, entity_type, details, created_at) 
             VALUES (?, ?, ?, ?, ?, ?)
             "#,
-            id, user_id, action, "AUTH_EVENT", payload, now
-        ).execute(pool).await;
+        )
+        .bind(id)
+        .bind(user_id)
+        .bind(action)
+        .bind("AUTH_EVENT")
+        .bind(payload)
+        .bind(now)
+        .execute(pool).await;
     }
 
     #[derive(Deserialize)]
@@ -222,9 +237,9 @@
         let now = Utc::now().to_rfc3339();
         let pin_hash = hash_pin(&payload.owner_pin).await?;
 
-        sqlx::query!("DELETE FROM stores").execute(&mut *tx).await.map_err(|e| e.to_string())?;
+        sqlx::query("DELETE FROM stores").execute(&mut *tx).await.map_err(|e| e.to_string())?;
         
-        sqlx::query!(
+        sqlx::query(
             r#"
             INSERT INTO stores (
               id, name_fr, name_ar, address, wilaya, commune,
@@ -232,19 +247,41 @@
               fiscal_regime, default_tva_rate, created_at, updated_at, ai_number
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
-            "store-alg-01", payload.store_name_fr, payload.store_name_ar, payload.address, payload.wilaya, payload.commune,
-            payload.phone, payload.rc, payload.nif, payload.nis, payload.fiscal_regime, payload.tva_rate, now, now, "AI-0000"
-        ).execute(&mut *tx).await.map_err(|e| e.to_string())?;
+        )
+        .bind("store-alg-01")
+        .bind(&payload.store_name_fr)
+        .bind(&payload.store_name_ar)
+        .bind(&payload.address)
+        .bind(&payload.wilaya)
+        .bind(&payload.commune)
+        .bind(&payload.phone)
+        .bind(&payload.rc)
+        .bind(&payload.nif)
+        .bind(&payload.nis)
+        .bind(&payload.fiscal_regime)
+        .bind(payload.tva_rate)
+        .bind(&now)
+        .bind(&now)
+        .bind("AI-0000")
+        .execute(&mut *tx).await.map_err(|e| e.to_string())?;
 
-        sqlx::query!("DELETE FROM users").execute(&mut *tx).await.map_err(|e| e.to_string())?;
+        sqlx::query("DELETE FROM users").execute(&mut *tx).await.map_err(|e| e.to_string())?;
 
-        sqlx::query!(
+        sqlx::query(
             r#"
             INSERT INTO users (id, name, role, pin_hash, phone, is_active, created_at, updated_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             "#,
-            "usr-owner-01", payload.owner_name, "owner", pin_hash, payload.owner_phone, 1, now, now
-        ).execute(&mut *tx).await.map_err(|e| e.to_string())?;
+        )
+        .bind("usr-owner-01")
+        .bind(&payload.owner_name)
+        .bind("owner")
+        .bind(pin_hash)
+        .bind(&payload.owner_phone)
+        .bind(1)
+        .bind(&now)
+        .bind(&now)
+        .execute(&mut *tx).await.map_err(|e| e.to_string())?;
 
         tx.commit().await.map_err(|e| e.to_string())?;
         
