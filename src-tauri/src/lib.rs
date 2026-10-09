@@ -4,6 +4,8 @@ pub mod models;
 pub mod commands;
 pub mod auth;
 pub mod repo;
+pub mod logger;
+pub mod runtime;
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
@@ -17,8 +19,7 @@ pub struct TerminalInfo {
 // Native command to trigger raw thermal printer ESC/POS commands
 #[tauri::command]
 fn raw_print_receipt(content: String, printer_name: Option<String>) -> Result<String, String> {
-    // In production on Windows, this sends raw bytes to the designated spooler printer
-    println!("ESC/POS Print Request: {} chars to printer {:?}", content.len(), printer_name);
+    crate::logger::log_info("PRINTER", &format!("ESC/POS Print Request: {} chars to printer {:?}", content.len(), printer_name));
     Ok("Receipt spooled successfully".to_string())
 }
 
@@ -26,7 +27,7 @@ fn raw_print_receipt(content: String, printer_name: Option<String>) -> Result<St
 #[tauri::command]
 fn open_cash_drawer(pin: Option<u8>) -> Result<bool, String> {
     let _kick_pin = pin.unwrap_or(0);
-    println!("RJ11 Cash Drawer kick pulse sent to pin {}", _kick_pin);
+    crate::logger::log_info("DRAWER", &format!("RJ11 Cash Drawer kick pulse sent to pin {}", _kick_pin));
     Ok(true)
 }
 
@@ -42,7 +43,7 @@ fn get_terminal_info() -> Result<TerminalInfo, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -51,11 +52,10 @@ pub fn run() {
             tauri::async_runtime::block_on(async move {
                 match db::init_db(&app_handle).await {
                     Ok(pool) => {
-                        println!("Database initialized successfully.");
                         app_handle.manage(pool);
                     }
                     Err(e) => {
-                        eprintln!("Failed to initialize database: {}", e);
+                        crate::logger::log_error("STARTUP", &format!("Fatal error initializing database: {}", e));
                     }
                 }
             });
@@ -78,10 +78,22 @@ pub fn run() {
             auth::update_user_pin,
             auth::deactivate_user,
             auth::get_store,
-            auth::update_store
+            auth::update_store,
+            logger::log_event,
+            logger::get_recent_logs,
+            runtime::get_runtime_paths,
+            runtime::create_database_backup,
+            runtime::list_database_backups,
+            runtime::verify_database_integrity
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Aquadro POS application");
+        .build(tauri::generate_context!())
+        .expect("error while building Aquadro POS application");
+
+    app.run(|_app_handle, event| {
+        if let tauri::RunEvent::Exit = event {
+            crate::logger::log_info("SHUTDOWN", "Aquadro POS application terminated cleanly.");
+        }
+    });
 }
 
 #[cfg(test)]

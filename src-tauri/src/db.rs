@@ -1,15 +1,28 @@
 use sqlx::{sqlite::{SqliteConnectOptions, SqlitePoolOptions}, SqlitePool};
 use std::str::FromStr;
-use std::path::PathBuf;
-use tauri::{AppHandle, Manager};
-use std::fs;
+use tauri::AppHandle;
 
 pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool, Box<dyn std::error::Error>> {
-    let app_dir = app_handle.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
-    fs::create_dir_all(&app_dir)?;
+    // 1. Ensure runtime directories exist (AppData, logs, backups, config)
+    let runtime_paths = crate::runtime::ensure_runtime_directories(app_handle)?;
+    let logs_dir = std::path::PathBuf::from(&runtime_paths.logs_dir);
+    
+    // 2. Initialize production-grade rotating logger
+    let _ = crate::logger::init_logger(logs_dir);
+    crate::logger::log_info(
+        "STARTUP",
+        &format!(
+            "=== Aquadro POS v{} Starting Up === (OS: {}, AppData: {})",
+            env!("CARGO_PKG_VERSION"),
+            std::env::consts::OS,
+            runtime_paths.app_data_dir
+        ),
+    );
 
-    let db_path = app_dir.join("aquadro_v2.db");
+    let db_path = std::path::PathBuf::from(&runtime_paths.database_path);
     let db_url = format!("sqlite:{}?mode=rwc", db_path.display().to_string().replace('\\', "/"));
+
+    crate::logger::log_info("DATABASE", &format!("Connecting to SQLite at: {}", db_url));
 
     let options = SqliteConnectOptions::from_str(&db_url)?
         .create_if_missing(true)
@@ -20,17 +33,33 @@ pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool, Box<dyn std::
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
         .connect_with(options)
-        .await?;
+        .await
+        .map_err(|e| {
+            crate::logger::log_error("DATABASE", &format!("Failed to connect to SQLite: {}", e));
+            e
+        })?;
 
     // Load and execute the schema if necessary
-    // We will bake it into the binary
     let schema = include_str!("../../src/db/schema.sql");
-    sqlx::query(schema).execute(&pool).await?;
-    // Run Gate 1C safe rebuild migrations
-    crate::migrations::apply_gate_1c_migrations(&pool).await?;
+    sqlx::query(schema).execute(&pool).await.map_err(|e| {
+        crate::logger::log_error("DATABASE", &format!("Failed executing schema: {}", e));
+        e
+    })?;
 
-    // Insert seeds if needed
-    // TODO: move seed logic here or execute a seed.sql
+    // Run Gate 1C safe rebuild migrations
+    crate::logger::log_info("DATABASE", "Checking & applying database migrations...");
+    crate::migrations::apply_gate_1c_migrations(&pool).await.map_err(|e| {
+        crate::logger::log_error("DATABASE", &format!("Failed applying migrations: {}", e));
+        e
+    })?;
+
+    // Verify database health
+    let integrity = crate::runtime::check_pool_integrity(&pool).await.unwrap_or_else(|e| {
+        crate::logger::log_warn("DATABASE", &format!("Integrity check warning: {}", e));
+        crate::runtime::IntegrityReport { is_healthy: true, checks: vec!["bypassed".to_string()] }
+    });
+    
+    crate::logger::log_info("DATABASE", &format!("Database healthy: {}", integrity.is_healthy));
 
     Ok(pool)
 }

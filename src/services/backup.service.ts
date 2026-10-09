@@ -1,10 +1,32 @@
-// Aquadro POS Algérie V2 — Service de Sauvegarde & Restauration Locale
-// Sauvegardes locales automatiques, export et restauration protégée par PIN Propriétaire
+// Aquadro POS — Runtime & Backup Service
+// Interface unifiée avec le moteur natif Rust de sauvegarde atomique SQLite (VACUUM INTO),
+// intégrité de la base (PRAGMA integrity_check) et migration JSON protégée par PIN Propriétaire.
 
 import { db } from '../db/sqlite';
 import { authService } from './auth.service';
 
-export interface BackupMetadata {
+export interface RuntimePathsInfo {
+  app_data_dir: string;
+  database_path: string;
+  logs_dir: string;
+  backups_dir: string;
+  config_dir: string;
+}
+
+export interface BackupInfo {
+  filename: string;
+  filepath: string;
+  size_bytes: number;
+  created_at: string;
+  is_valid: boolean;
+}
+
+export interface IntegrityReport {
+  is_healthy: boolean;
+  checks: string[];
+}
+
+export interface JsonBackupMetadata {
   id: string;
   filename: string;
   createdAt: string;
@@ -14,8 +36,11 @@ export interface BackupMetadata {
 
 export class BackupService {
   private static instance: BackupService;
+  private isTauri = false;
 
-  private constructor() {}
+  private constructor() {
+    this.isTauri = typeof window !== 'undefined' && typeof (window as any).__TAURI_INTERNALS__?.invoke === 'function';
+  }
 
   public static getInstance(): BackupService {
     if (!BackupService.instance) {
@@ -24,8 +49,87 @@ export class BackupService {
     return BackupService.instance;
   }
 
-  // Créer une sauvegarde instantanée
-  public async createBackup(): Promise<BackupMetadata> {
+  /**
+   * Récupère les chemins système AppData résolus
+   */
+  public async getRuntimePaths(): Promise<RuntimePathsInfo | null> {
+    if (!this.isTauri) {
+      return {
+        app_data_dir: 'Navigateur / LocalStorage',
+        database_path: 'aquadro_v2.db',
+        logs_dir: 'Navigateur Console',
+        backups_dir: 'Téléchargements',
+        config_dir: 'LocalStorage',
+      };
+    }
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return await invoke<RuntimePathsInfo>('get_runtime_paths');
+    } catch (err) {
+      console.warn('[BackupService] Impossible d\'obtenir les chemins runtime:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Crée un instantané atomique natif SQLite (VACUUM INTO) dans AppData/backups/
+   */
+  public async createBackup(label?: string): Promise<BackupInfo | null> {
+    if (this.isTauri) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        return await invoke<BackupInfo>('create_database_backup', { label: label || 'manual' });
+      } catch (err) {
+        console.error('[BackupService] Échec création de sauvegarde native:', err);
+        throw err;
+      }
+    } else {
+      // Mode web / secours : génère un fichier JSON
+      const jsonMeta = await this.exportJsonBackup();
+      return {
+        filename: jsonMeta.filename,
+        filepath: 'Downloads/' + jsonMeta.filename,
+        size_bytes: jsonMeta.sizeBytes,
+        created_at: jsonMeta.createdAt,
+        is_valid: true,
+      };
+    }
+  }
+
+  /**
+   * Liste les sauvegardes physiques présentes dans AppData/backups/
+   */
+  public async listBackups(): Promise<BackupInfo[]> {
+    if (!this.isTauri) return [];
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return await invoke<BackupInfo[]>('list_database_backups');
+    } catch (err) {
+      console.warn('[BackupService] Échec liste des sauvegardes:', err);
+      return [];
+    }
+  }
+
+  /**
+   * Exécute un diagnostic d'intégrité de la base de données
+   */
+  public async verifyDatabaseIntegrity(): Promise<IntegrityReport> {
+    if (!this.isTauri) {
+      return { is_healthy: true, checks: ['Mode mémoire / simulateur'] };
+    }
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return await invoke<IntegrityReport>('verify_database_integrity');
+    } catch (err) {
+      console.error('[BackupService] Échec vérification d\'intégrité:', err);
+      return { is_healthy: false, checks: [String(err)] };
+    }
+  }
+
+  /**
+   * Exporte un dump structuré au format JSON pour portabilité ou archivage externe
+   */
+  public async exportJsonBackup(): Promise<JsonBackupMetadata> {
     const tableNames = [
       'stores', 'roles', 'permissions', 'users', 'categories', 'brands', 'suppliers',
       'products', 'customers', 'product_batches', 'inventory_movements', 'sales',
@@ -48,12 +152,12 @@ export class BackupService {
       }
     }
 
-    const data = JSON.stringify(tablesData);
+    const data = JSON.stringify(tablesData, null, 2);
     const now = new Date();
     const dateStr = now.toISOString().replace(/[:.]/g, '-');
     const filename = `aquadro_backup_${dateStr}.json`;
 
-    const metadata: BackupMetadata = {
+    const metadata: JsonBackupMetadata = {
       id: `bkp-${Date.now()}`,
       filename,
       createdAt: now.toISOString(),
@@ -61,7 +165,6 @@ export class BackupService {
       tableCounts
     };
 
-    // Téléchargement / écriture fichier
     if (typeof document !== 'undefined') {
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -73,7 +176,6 @@ export class BackupService {
       document.body.removeChild(link);
     }
 
-    // Inscrire dans l'audit log
     const user = authService.getCurrentUser();
     await db.execute(
       `INSERT INTO audit_logs (id, user_id, user_name, action, entity_type, details, created_at)
@@ -82,9 +184,9 @@ export class BackupService {
         `audit-${Date.now()}`,
         user?.id || 'system',
         user?.name || 'Système',
-        'BACKUP_CREATED',
+        'BACKUP_JSON_EXPORTED',
         'SYSTEM',
-        `Sauvegarde locale créée : ${filename} (${metadata.sizeBytes} octets)`,
+        `Sauvegarde JSON exportée : ${filename} (${metadata.sizeBytes} octets)`,
         new Date().toISOString()
       ]
     );
@@ -92,7 +194,9 @@ export class BackupService {
     return metadata;
   }
 
-  // Restauration de base de données protégée par le PIN Propriétaire
+  /**
+   * Restauration de la base depuis un fichier JSON, strictement protégée par le PIN Propriétaire
+   */
   public async restoreBackup(jsonData: string, ownerPin: string): Promise<boolean> {
     const pinCheck = await authService.verifyManagerOrOwnerPin(ownerPin);
     if (!pinCheck.valid || pinCheck.user?.role !== 'owner') {

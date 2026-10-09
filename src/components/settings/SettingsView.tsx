@@ -35,7 +35,10 @@ import {
   Download,
   AlertTriangle,
   AlertCircle,
-  Trash2
+  Trash2,
+  ShieldCheck,
+  HardDrive,
+  Folder
 } from 'lucide-react';
 
 import { updateService, UpdateState } from '../../services/update.service';
@@ -94,10 +97,31 @@ export const SettingsView: React.FC = () => {
   const [ownerPinForRestore, setOwnerPinForRestore] = useState<string>('');
   const [restoreJson, setRestoreJson] = useState<string>('');
   const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
+  const [runtimePaths, setRuntimePaths] = useState<any>(null);
+  const [dbBackups, setDbBackups] = useState<any[]>([]);
+  const [integrityStatus, setIntegrityStatus] = useState<string | null>(null);
+  const [isBackingUp, setIsBackingUp] = useState<boolean>(false);
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'backup') {
+      loadBackupDetails();
+    }
+  }, [activeTab]);
+
+  const loadBackupDetails = async () => {
+    try {
+      const paths = await backupService.getRuntimePaths();
+      if (paths) setRuntimePaths(paths);
+      const list = await backupService.listBackups();
+      setDbBackups(list);
+    } catch (e) {
+      console.warn('Erreur chargement détails sauvegarde:', e);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -184,12 +208,42 @@ export const SettingsView: React.FC = () => {
     }
   };
 
+  const handleCreateSqliteBackup = async () => {
+    try {
+      setIsBackingUp(true);
+      const meta = await backupService.createBackup('manuel');
+      if (meta) {
+        showToast(`Instantané SQLite créé avec succès (${meta.filename})`, 'success');
+        await loadBackupDetails();
+      }
+    } catch (err: any) {
+      showToast(`Erreur sauvegarde SQLite : ${err.message || err}`, 'error');
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleCheckIntegrity = async () => {
+    try {
+      const report = await backupService.verifyDatabaseIntegrity();
+      if (report.is_healthy) {
+        setIntegrityStatus('Base saine et intègre (PRAGMA integrity_check: OK)');
+        showToast('Intégrité de la base de données vérifiée : 100% Saine', 'success');
+      } else {
+        setIntegrityStatus(`Problème détecté : ${report.checks.join(', ')}`);
+        showToast('Avertissement sur l\'intégrité de la base', 'error');
+      }
+    } catch (err: any) {
+      showToast(`Erreur test intégrité : ${err.message || err}`, 'error');
+    }
+  };
+
   const handleExportBackup = async () => {
     try {
-      const meta = await backupService.createBackup();
-      showToast(`Sauvegarde exportée avec succès (${meta.filename})`, 'success');
+      const meta = await backupService.exportJsonBackup();
+      showToast(`Sauvegarde JSON exportée avec succès (${meta.filename})`, 'success');
     } catch (err: any) {
-      showToast(`Erreur sauvegarde : ${err.message}`, 'error');
+      showToast(`Erreur sauvegarde JSON : ${err.message || err}`, 'error');
     }
   };
 
@@ -699,20 +753,120 @@ export const SettingsView: React.FC = () => {
 
         {/* TAB 4: SAUVEGARDES LOCALES & RESTAURATION */}
         {activeTab === 'backup' && (
-          <div className="max-w-2xl space-y-5">
-            <div>
-              <h3 className="font-bold text-gray-900 text-sm mb-1">Sauvegardes Locales de la Base de Données</h3>
-              <p className="text-[11px] text-gray-500 mb-3">
-                Exportez une copie intégrale et autonome du grand livre SQLite (catalogue, stocks, lots FEFO, ventes et caisses).
+          <div className="max-w-3xl space-y-6">
+            {/* Architecture Runtime & Emplacements Windows */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-slate-800 font-bold text-sm">
+                  <HardDrive className="w-4 h-4 text-blue-600" />
+                  <span>Architecture des Données Runtime (AppData Découplé)</span>
+                </div>
+                <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full border border-green-200">
+                  Persistance Garantie
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Aquadro POS sépare rigoureusement les binaires applicatifs de vos données de caisse.
+                Toutes vos données résident dans l'espace utilisateur Windows sécurisé et persistent après redémarrage, mise à jour ou réinstallation.
+              </p>
+
+              {runtimePaths && (
+                <div className="grid grid-cols-1 gap-2 pt-2 border-t border-slate-200 text-xs font-mono">
+                  <div className="flex items-center justify-between bg-white p-2 rounded border border-slate-200">
+                    <span className="text-slate-500 font-sans font-medium">Base de Données SQLite :</span>
+                    <span className="text-slate-900 truncate max-w-md select-all" title={runtimePaths.database_path}>
+                      {runtimePaths.database_path}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-white p-2 rounded border border-slate-200">
+                    <span className="text-slate-500 font-sans font-medium">Journaux Rotatifs (Logs) :</span>
+                    <span className="text-slate-900 truncate max-w-md select-all" title={runtimePaths.logs_dir}>
+                      {runtimePaths.logs_dir}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-white p-2 rounded border border-slate-200">
+                    <span className="text-slate-500 font-sans font-medium">Dossier des Sauvegardes :</span>
+                    <span className="text-slate-900 truncate max-w-md select-all" title={runtimePaths.backups_dir}>
+                      {runtimePaths.backups_dir}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Actions Sauvegarde Native & Intégrité */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCreateSqliteBackup}
+                  disabled={isBackingUp}
+                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-xs flex items-center space-x-2 shadow-sm transition disabled:opacity-50"
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span>{isBackingUp ? 'Création en cours...' : 'Créer un Instantané SQLite Atomique (VACUUM INTO)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCheckIntegrity}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-xs flex items-center space-x-2 shadow-sm transition"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Tester l'Intégrité de la Base (PRAGMA integrity_check)</span>
+                </button>
+              </div>
+
+              {integrityStatus && (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800 font-medium flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{integrityStatus}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Liste des Instantanés Physiques */}
+            {dbBackups.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                    <Folder className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Instantanés SQLite Disponibles ({dbBackups.length})</span>
+                  </h4>
+                </div>
+                <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto border border-gray-100 rounded">
+                  {dbBackups.map((bkp, i) => (
+                    <div key={i} className="py-2 px-3 flex items-center justify-between text-xs hover:bg-gray-50">
+                      <div>
+                        <div className="font-mono font-bold text-gray-800">{bkp.filename}</div>
+                        <div className="text-[10px] text-gray-500">{new Date(bkp.created_at).toLocaleString('fr-FR')}</div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-[11px] font-mono text-gray-600">
+                          {(bkp.size_bytes / 1024).toFixed(1)} Ko
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${bkp.is_valid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {bkp.is_valid ? 'Valide' : 'Invalide'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sauvegarde JSON Externe */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+              <h3 className="font-bold text-gray-900 text-sm mb-1">Export / Migration de Données (Format JSON)</h3>
+              <p className="text-[11px] text-gray-500">
+                Générez un fichier d'échange universel JSON contenant l'ensemble de vos tables (articles, stocks, ventes, lots FEFO, tiers).
               </p>
 
               <button
                 type="button"
                 onClick={handleExportBackup}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded flex items-center space-x-2"
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded flex items-center space-x-2 text-xs"
               >
                 <Download className="w-4 h-4" />
-                <span>Exporter la sauvegarde locale (Fichier JSON)</span>
+                <span>Exporter le Grand Livre en JSON</span>
               </button>
             </div>
 

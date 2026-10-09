@@ -28,10 +28,10 @@ import { LoginView } from './components/auth/LoginView';
 import { db } from './db/sqlite';
 import { authService } from './services/auth.service';
 import { User } from './types/database';
-import { RotateCcw } from 'lucide-react';
-
+import { SplashScreen } from './components/splash/SplashScreen';
 import { UpdateNotificationModal } from './components/common/UpdateNotificationModal';
 import { updateService } from './services/update.service';
+import { logger } from './services/logger.service';
 
 export const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<NavView>('pos');
@@ -47,28 +47,19 @@ export const AppContent: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const initApp = async () => {
-      try {
-        await db.initialize();
-        await authService.initSession();
+  const handleAppReady = () => {
+    const completed = localStorage.getItem('aquadro_setup_completed');
+    if (!completed) {
+      setShowSetup(true);
+    }
+    setIsInitializing(false);
+    logger.info('APPLICATION', 'Espace de travail Aquadro POS prêt et actif');
 
-        const completed = localStorage.getItem('aquadro_setup_completed');
-        if (!completed) {
-          setShowSetup(true);
-        }
-      } catch (err) {
-        console.error('Initialization error:', err);
-      } finally {
-        setIsInitializing(false);
-        // Non-blocking silent background update check
-        updateService.checkForUpdates(true).catch((err) => {
-          console.warn('[App] Silent update check error:', err);
-        });
-      }
-    };
-    initApp();
-  }, []);
+    // Non-blocking silent background update check
+    updateService.checkForUpdates(true).catch((err) => {
+      logger.warn('UPDATER', `Vérification mise à jour en arrière-plan ignorée: ${err}`);
+    });
+  };
 
   // Raccourcis clavier globaux POS et Navigation
   useEffect(() => {
@@ -99,19 +90,7 @@ export const AppContent: React.FC = () => {
   }, []);
 
   if (isInitializing) {
-    return (
-      <div className="h-screen w-screen bg-gray-100 flex flex-col items-center justify-center text-gray-700 select-none">
-        <div className="p-6 bg-white border border-gray-300 rounded shadow-md flex flex-col items-center max-w-sm text-center">
-          <RotateCcw className="w-8 h-8 text-blue-600 animate-spin mb-3" />
-          <h2 className="text-sm font-bold text-gray-900 tracking-wide uppercase">
-            Aquadro POS Algérie V2
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">
-            Chargement du grand livre SQLite local & initialisation des modules métier...
-          </p>
-        </div>
-      </div>
-    );
+    return <SplashScreen onReady={handleAppReady} />;
   }
 
   return (
