@@ -93,12 +93,27 @@ jobs:
           fi
           echo "Semantic Version verification passed: $RAW_VERSION"
 
+      - name: Sanitize Updater Signing Keys
+        shell: bash
+        env:
+          RAW_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          RAW_PASS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          # Strip any trailing newlines, carriage returns or spaces from the Base64 key
+          CLEAN_KEY=$(printf '%s' "$RAW_KEY" | tr -d '\r\n ')
+          CLEAN_PASS=$(printf '%s' "$RAW_PASS" | tr -d '\r\n')
+          
+          echo "CLEAN_TAURI_PRIVATE_KEY=$CLEAN_KEY" >> "$GITHUB_ENV"
+          echo "CLEAN_TAURI_PRIVATE_KEY_PASSWORD=$CLEAN_PASS" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY=$CLEAN_KEY" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$CLEAN_PASS" >> "$GITHUB_ENV"
+
       - name: Build Tauri Application & Release Artifacts
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ env.CLEAN_TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ env.CLEAN_TAURI_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: 'Aquadro POS v__VERSION__'
